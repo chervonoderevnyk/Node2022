@@ -2,6 +2,7 @@
   "name": "Node2022",
   "version": "1.0.0",
   "dependencies": {
-    "express": "^4.18.2"
+    "express": "^4.18.2",
+    "npm": "^8.19.4"
   }
 }

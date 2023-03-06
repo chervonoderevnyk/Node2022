@@ -1,148 +1,96 @@
-// -- EVENT --
-// const event = require('node:events');
-//
-// const eventEmitter = new event();
-//
-// eventEmitter.on('click', ()=>{
-//   console.log('Click click click');
-// });
-//
-// eventEmitter.emit('click')
-//
-// eventEmitter.emit('click')
-// eventEmitter.emit('click')
-// eventEmitter.emit('click')
-//
-// eventEmitter.once('clickAndDie', ()=>{
-//   console.log("I'm gonna die after being called");
-// })
-// console.log(eventEmitter.eventNames());
-//
-// eventEmitter.emit('clickAndDie');
-//
-// eventEmitter.emit('clickAndDie');
-// eventEmitter.emit('clickAndDie');
-// eventEmitter.emit('clickAndDie');
-// eventEmitter.emit('clickAndDie');
-//
-// console.log(eventEmitter.eventNames());
-
-
-// -- STREAMS --
-// const fs = require('fs');
-// const path = require("path");
-//
-// const readStream = fs.createReadStream(path.join('test', 'text3.txt'));
-// const writeStream = fs.createWriteStream(path.join('test', 'text2.txt'))
-
-// read, write, duplex, transform --- types of streams !!!
-
-// readStream.on('data', (chunk) => {
-//   writeStream.write(chunk);
-// });
-
-// const handleError = () => {
-//   console.error('ERROR!!!');
-//   readStream.destroy();
-//   writeStream.end('ERROR WHILE READING FILE');
-// }
-//
-// readStream
-//   .on('error', handleError)
-//   .pipe(writeStream)
-//   .on('error', handleError);
-
-// -- EXPRESS --
-
 const express = require('express');
+const fsService = require('./fs.service');
 
 const app = express();
 
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }))
+app.use(express.urlencoded({extended: true}))
 
-const users = [
-    {
-        name: 'Oleh',
-        age: 19,
-        gender: 'male'
-    },
-    {
-        name: 'Anton',
-        age: 22,
-        gender: 'female'
-    },
-    {
-        name: 'Anya',
-        age: 25,
-        gender: 'female'
-    },
-    {
-        name: 'Ielizavetta',
-        age: 35,
-        gender: 'female'
-    },
-    {
-        name: 'Cocos',
-        age: 70,
-        gender: 'mixed'
-    }
-]
-
-app.get('/users', (req, res)=>{
+app.get('/users', async (req, res) => {
+    const users = await fsService.reader();
     res.json(users);
 });
 
-app.get('/users/:userId', (req, res)=>{
-    const { userId } = req.params;
-    const user = users[+userId];
+app.post('/users', async (req, res) => {
+    const {name, age, gender} = req.body;
+
+    if (!name || name.length < 2) {
+        res.status(400).json('Wrong name');
+    }
+    if (!age || !Number.isInteger(age) || Number.isNaN(age)) {
+        res.status(400).json('Wrong age');
+    }
+    if (!gender || (gender !== 'male' && gender !== 'female')) {
+        res.status(400).json('Wrong gender');
+    }
+
+    const users = await fsService.reader();
+    const newUser = {id: users[users.length - 1]?.id + 1 || 1, name, age, gender};
+
+    users.push(newUser);
+    await fsService.writer(users);
+    res.status(201).json(newUser);
+});
+
+app.get('/users/:userId', async (req, res) => {
+    const {userId} = req.params;
+
+    const users = await fsService.reader();
+    const user = users.find((user) => user.id === +userId);
+
+    if (!user) {
+        res.status(422).json(`User with id: ${userId} not found`);
+    }
 
     res.json(user);
 });
 
-app.post('/users', (req, res)=>{
-    const body = req.body;
-    users.push(body);
+app.patch('/users/:userId', async (req, res) => {
+    const {userId} = req.params;
+    const {name, age, gender} = req.body;
 
-    res.status(201).json({
-        message: 'User created!'
-    })
-})
+    if (name && name.length < 2) {
+        res.status(400).json('Wrong name');
+    }
+    if (age && !Number.isInteger(age) || Number.isNaN(age)) {
+        res.status(400).json('Wrong age');
+    }
+    if (gender && (gender !== 'male' && gender !== 'female')) {
+        res.status(400).json('Wrong gender');
+    }
 
+    const users = await fsService.reader();
+    const index = users.findIndex((user) => user.id === +userId);
 
-app.put('/users/:userId', (req, res)=>{
-    const { userId } = req.params;
-    const updatedUser = req.body;
+    if (index === -1) {
+        res.status(422).json(`User with id: ${userId} not found`);
+    }
+    users[index] = {...users[index], ...req.body};
 
-    users[+userId] = updatedUser;
+    await fsService.writer(users);
+    res.status(201).json(users[index]);
+});
 
-    res.status(200).json({
-        message: 'User updated',
-        data: users[+userId]
-    })
-})
+app.delete('/users/:userId', async (req, res) => {
+    const {userId} = req.params;
 
-app.delete('/users/:userId', (req, res)=>{
-    const { userId } = req.params;
+    const users = await fsService.reader();
+    const index = users.findIndex((user) => user.id === +userId);
+    if (index === -1) {
+        res.status(422).json(`User with id: ${userId} not found`);
+    }
 
-    users.splice(+userId, 1);
+    users.splice(index, 1);
+    await fsService.writer(users);
 
-    res.status(200).json({
-        message: 'User deleted',
-    })
-})
-
-
-
-
-
-app.get('/welcome', (req, res)=>{
+    res.sendStatus(204);
+});
+app.get('/welcome', (req, res) => {
     res.send('WELCOME');
 });
 
-
 const PORT = 5100;
 
-app.listen(PORT, ()=>{
+app.listen(PORT, () => {
     console.log(`Server has started on PORT ${PORT} 🚀🚀🚀`);
 });
