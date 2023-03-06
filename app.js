@@ -141,11 +141,6 @@ app.get('/welcome', (req, res)=>{
 });
 
 
-// app.post()
-// app.put()
-// app.patch()
-// app.delete()
-
 const PORT = 5100;
 
 app.listen(PORT, ()=>{
