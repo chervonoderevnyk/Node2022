@@ -1,4 +1,4 @@
-import { AppiError } from "../errors/appi.error";
+import { ApiError } from "../errors/api.error";
 import { User } from "../models/User.model";
 import { IUser } from "../types/user.types";
 
@@ -7,7 +7,7 @@ class UserService {
     try {
       return User.find();
     } catch (e) {
-      throw new AppiError(e.message, e.status);
+      throw new ApiError(e.message, e.status);
     }
   }
 
@@ -15,7 +15,7 @@ class UserService {
     try {
       return User.findById(id);
     } catch (e) {
-      throw new AppiError(e.message, e.status);
+      throw new ApiError(e.message, e.status);
     }
   }
 }

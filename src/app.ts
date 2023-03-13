@@ -13,7 +13,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use("/users", userRouter);
 
 app.use((err: IError, req: Request, res: Response, next: NextFunction) => {
-  const status = err.status;
+  const status = err.status || 500;
 
   return res.status(status).json({
     message: err.message,
@@ -21,7 +21,8 @@ app.use((err: IError, req: Request, res: Response, next: NextFunction) => {
   });
 });
 
-app.listen(configs.PORT, () => {
-  mongoose.connect(configs.DB_URL);
+app.listen(configs.PORT, async () => {
+  await mongoose.connect(configs.DB_URL);
+  // eslint-disable-next-line no-console
   console.log(`Server has started on PORT ${configs.PORT} 🚀🚀🚀`);
 });
