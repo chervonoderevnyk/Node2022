@@ -1,6 +1,7 @@
+import path from "node:path";
+
 import EmailTemplates from "email-templates";
 import nodemailer, { Transporter } from "nodemailer";
-import * as path from "path";
 
 import { configs } from "../configs";
 import { allTemplates } from "../constants";
@@ -35,17 +36,29 @@ class EmailService {
     });
   }
 
-  public async sendMail(email: string, emailAction: EEmailActions) {
-    const templateInfo = allTemplates[emailAction];
+  public async sendMail(
+    email: string | string[],
+    emailAction: EEmailActions,
+    locals: Record<string, string> = {}
+  ) {
+    try {
+      const templateInfo = allTemplates[emailAction];
+      locals.frontUrl = configs.FRONT_URL;
 
-    const html = await this.templateParser.render(templateInfo.templateName);
+      const html = await this.templateParser.render(
+        templateInfo.templateName,
+        locals
+      );
 
-    return this.transporter.sendMail({
-      from: "No reply",
-      to: email,
-      subject: templateInfo.subject,
-      html,
-    });
+      return this.transporter.sendMail({
+        from: "No reply",
+        to: email,
+        subject: templateInfo.subject,
+        html,
+      });
+    } catch (e) {
+      console.error(e.message);
+    }
   }
 }
 
