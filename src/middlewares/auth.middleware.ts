@@ -1,8 +1,10 @@
 import { NextFunction, Request, Response } from "express";
 
-import { EActionTokenType, ETokenType } from "../enums";
+import { ETokenType } from "../enums";
+import { EActionTokenType } from "../enums/action-token-type.enum";
 import { ApiError } from "../errors";
-import { Action, OldPassword, Token } from "../models";
+import { Action, Token } from "../models";
+import { OldPassword } from "../models/Old.password.model";
 import { passwordService, tokenService } from "../services";
 
 class AuthMiddleware {

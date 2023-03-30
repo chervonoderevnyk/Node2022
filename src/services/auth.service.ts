@@ -1,6 +1,8 @@
-import { EActionTokenType, EEmailActions, EUserStatus } from "../enums";
+import { EEmailActions, EUserStatus } from "../enums";
+import { EActionTokenType } from "../enums/action-token-type.enum";
 import { ApiError } from "../errors";
-import { Action, OldPassword, Token, User } from "../models";
+import { Action, Token, User } from "../models";
+import { OldPassword } from "../models/Old.password.model";
 import { ICredentials, ITokenPair, ITokenPayload, IUser } from "../types";
 import { emailService } from "./email.service";
 import { passwordService } from "./password.service";
